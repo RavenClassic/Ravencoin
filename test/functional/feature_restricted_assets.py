@@ -356,48 +356,6 @@ class RestrictedAssetsTest(RavenTestFramework):
 
         # TODO: test that freezing actually works to prevent transfers (maybe here maybe in another function...)
 
-    def freezing(self):
-        self.log.info("Testing freezing...")
-        n0 = self.nodes[0]
-
-        base_asset_name = "FROZEN_TM"
-        asset_name = f"${base_asset_name}"
-        qty = 10000
-        verifier = "true"
-        address = n0.getnewaddress()
-        change_address = n0.getnewaddress()
-
-        n0.issue(base_asset_name)
-        n0.generate(1)
-
-        n0.issuerestrictedasset(asset_name, qty, verifier, address)
-        n0.generate(1)
-
-        assert_does_not_contain(asset_name, n0.listaddressrestrictions(address))
-        assert not n0.checkaddressrestriction(address, asset_name)
-
-        assert_raises_rpc_error(None, "Invalid Raven address", n0.freezeaddress, asset_name, "garbageaddress")
-        assert_raises_rpc_error(None, "Invalid Raven change address", n0.freezeaddress, asset_name, address,
-                                "garbagechangeaddress")
-
-        n0.freezeaddress(asset_name, address, change_address)
-        n0.generate(1)
-
-        assert_contains(asset_name, n0.listaddressrestrictions(address))
-        assert n0.checkaddressrestriction(address, asset_name)
-
-        assert_raises_rpc_error(None, "Invalid Raven address", n0.unfreezeaddress, asset_name, "garbageaddress")
-        assert_raises_rpc_error(None, "Invalid Raven change address", n0.unfreezeaddress, asset_name, address,
-                                "garbagechangeaddress")
-
-        n0.unfreezeaddress(asset_name, address, change_address)
-        n0.generate(1)
-
-        assert_does_not_contain(asset_name, n0.listaddressrestrictions(address))
-        assert not n0.checkaddressrestriction(address, asset_name)
-
-        # TODO: test that freezing actually works to prevent transfers (maybe here maybe in another function...)
-
     def global_freezing(self):
         self.log.info("Testing global freezing...")
         n0 = self.nodes[0]
