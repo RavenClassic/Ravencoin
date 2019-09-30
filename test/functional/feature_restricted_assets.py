@@ -339,14 +339,15 @@ class RestrictedAssetsTest(RavenTestFramework):
 
     def freezing(self):
         self.log.info("Testing freezing...")
-        n0 = self.nodes[0]
+        n0, n1 = self.nodes[0], self.nodes[1]
 
         base_asset_name = "FROZEN_TM"
         asset_name = f"${base_asset_name}"
-        qty = 10000
+        qty = 11000
         verifier = "true"
         address = n0.getnewaddress()
-        change_address = n0.getnewaddress()
+        safe_address = n0.getnewaddress()
+        rvn_change_address = n0.getnewaddress()
 
         n0.issue(base_asset_name)
         n0.generate(1)
@@ -354,30 +355,56 @@ class RestrictedAssetsTest(RavenTestFramework):
         n0.issuerestrictedasset(asset_name, qty, verifier, address)
         n0.generate(1)
 
+        # squirrel some away
+        change_address = n0.getnewaddress()
+        n0.transferfromaddress(asset_name, address, 1000, safe_address, "", "", "", change_address)
+        n0.generate(1)
+        address = change_address
+
+        # pre-freezing verification
         assert_does_not_contain(asset_name, n0.listaddressrestrictions(address))
-        assert not n0.checkaddressrestriction(address, asset_name)
+        assert not n0.checkaddressrestriction(address, address)
+        assert_equal(10000, n0.listassetbalancesbyaddress(address)[asset_name])
+        change_address = n0.getnewaddress()
+        n0.transferfromaddress(asset_name, address, 1000, n1.getnewaddress(), "", "", "", change_address)
+        n0.generate(1)
+        self.sync_all()
+        assert_equal(9000, n0.listassetbalancesbyaddress(change_address)[asset_name])
+        assert_equal(1000, n1.listmyassets()[asset_name])
+        address = change_address # assets have moved
 
         assert_raises_rpc_error(None, "Invalid Raven address", n0.freezeaddress, asset_name, "garbageaddress")
         assert_raises_rpc_error(None, "Invalid Raven change address", n0.freezeaddress, asset_name, address,
                                 "garbagechangeaddress")
 
-        n0.freezeaddress(asset_name, address, change_address)
+        n0.freezeaddress(asset_name, address, rvn_change_address)
         n0.generate(1)
 
+        # post-freezing verification
         assert_contains(asset_name, n0.listaddressrestrictions(address))
         assert n0.checkaddressrestriction(address, asset_name)
+        assert_raises_rpc_error(-8, "No asset outpoints are selected from the given address", n0.transferfromaddress,
+                                asset_name, address, 1000, n1.getnewaddress())
 
         assert_raises_rpc_error(None, "Invalid Raven address", n0.unfreezeaddress, asset_name, "garbageaddress")
         assert_raises_rpc_error(None, "Invalid Raven change address", n0.unfreezeaddress, asset_name, address,
                                 "garbagechangeaddress")
 
-        n0.unfreezeaddress(asset_name, address, change_address)
+        # post-unfreezing verification
+        n0.unfreezeaddress(asset_name, address, rvn_change_address)
         n0.generate(1)
 
         assert_does_not_contain(asset_name, n0.listaddressrestrictions(address))
         assert not n0.checkaddressrestriction(address, asset_name)
+        assert_equal(9000, n0.listassetbalancesbyaddress(address)[asset_name])
+        change_address = n0.getnewaddress()
+        n0.transferfromaddress(asset_name, address, 1000, n1.getnewaddress(), "", "", "", change_address)
+        n0.generate(1)
+        self.sync_all()
+        assert_equal(8000, n0.listassetbalancesbyaddress(change_address)[asset_name])
+        assert_equal(2000, n1.listmyassets()[asset_name])
+        address = change_address # assets have moved
 
-        # TODO: test that freezing actually works to prevent transfers (maybe here maybe in another function...)
 
     def global_freezing(self):
         self.log.info("Testing global freezing...")
@@ -467,8 +494,8 @@ class RestrictedAssetsTest(RavenTestFramework):
         # self.issuequalifierasset()
         # self.issuequalifierasset_full()
         # self.transferqualifier()
-        self.tagging()
-        # self.freezing()
+        # self.tagging()
+        self.freezing()
         # self.global_freezing()
         # self.isvalidverifierstring()
 
