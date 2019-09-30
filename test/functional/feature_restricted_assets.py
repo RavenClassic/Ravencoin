@@ -508,16 +508,16 @@ class RestrictedAssetsTest(RavenTestFramework):
     def run_test(self):
         self.activate_restricted_assets()
 
-        # self.issuerestrictedasset()
-        # self.issuerestrictedasset_full()
-        # self.reissuerestrictedasset_full()
-        # self.issuequalifierasset()
-        # self.issuequalifierasset_full()
-        # self.transferqualifier()
-        # self.tagging()
-        # self.freezing()
+        self.issuerestrictedasset()
+        self.issuerestrictedasset_full()
+        self.reissuerestrictedasset_full()
+        self.issuequalifierasset()
+        self.issuequalifierasset_full()
+        self.transferqualifier()
+        self.tagging()
+        self.freezing()
         self.global_freezing()
-        # self.isvalidverifierstring()
+        self.isvalidverifierstring()
 
 if __name__ == '__main__':
     RestrictedAssetsTest().main()
