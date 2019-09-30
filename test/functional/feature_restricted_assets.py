@@ -415,7 +415,7 @@ class RestrictedAssetsTest(RavenTestFramework):
         qty = 10000
         verifier = "true"
         address = n0.getnewaddress()
-        change_address = n0.getnewaddress()
+        rvn_change_address = n0.getnewaddress()
 
         n0.issue(base_asset_name)
         n0.generate(1)
@@ -438,7 +438,7 @@ class RestrictedAssetsTest(RavenTestFramework):
         assert_raises_rpc_error(None, "Invalid Raven change address", n0.freezerestrictedasset, asset_name,
                                 "garbagechangeaddress")
 
-        n0.freezerestrictedasset(asset_name, change_address)
+        n0.freezerestrictedasset(asset_name, rvn_change_address)
         n0.generate(1)
 
         # post-freeze validation
@@ -450,7 +450,7 @@ class RestrictedAssetsTest(RavenTestFramework):
         assert_raises_rpc_error(None, "Invalid Raven change address", n0.unfreezerestrictedasset, asset_name,
                                 "garbagechangeaddress")
 
-        n0.unfreezerestrictedasset(asset_name, change_address)
+        n0.unfreezerestrictedasset(asset_name, rvn_change_address)
         n0.generate(1)
 
         # post-unfreeze validation
