@@ -390,10 +390,10 @@ class RestrictedAssetsTest(RavenTestFramework):
         assert_raises_rpc_error(None, "Invalid Raven change address", n0.unfreezeaddress, asset_name, address,
                                 "garbagechangeaddress")
 
-        # post-unfreezing verification
         n0.unfreezeaddress(asset_name, address, rvn_change_address)
         n0.generate(1)
 
+        # post-unfreezing verification
         assert_does_not_contain(asset_name, n0.listaddressrestrictions(address))
         assert not n0.checkaddressrestriction(address, asset_name)
         assert_equal(9000, n0.listassetbalancesbyaddress(address)[asset_name])
@@ -408,7 +408,7 @@ class RestrictedAssetsTest(RavenTestFramework):
 
     def global_freezing(self):
         self.log.info("Testing global freezing...")
-        n0 = self.nodes[0]
+        n0, n1 = self.nodes[0], self.nodes[1]
 
         base_asset_name = "FROZEN_GLOBAL"
         asset_name = f"${base_asset_name}"
@@ -423,8 +423,17 @@ class RestrictedAssetsTest(RavenTestFramework):
         n0.issuerestrictedasset(asset_name, qty, verifier, address)
         n0.generate(1)
 
+        # pre-freeze validation
         assert_does_not_contain(asset_name, n0.listglobalrestrictions())
         assert not n0.checkglobalrestriction(asset_name)
+        assert_equal(10000, n0.listassetbalancesbyaddress(address)[asset_name])
+        change_address = n0.getnewaddress()
+        n0.transferfromaddress(asset_name, address, 1000, n1.getnewaddress(), "", "", "", change_address)
+        n0.generate(1)
+        self.sync_all()
+        assert_equal(9000, n0.listassetbalancesbyaddress(change_address)[asset_name])
+        assert_equal(1000, n1.listmyassets()[asset_name])
+        address = change_address # assets have moved
 
         assert_raises_rpc_error(None, "Invalid Raven change address", n0.freezerestrictedasset, asset_name,
                                 "garbagechangeaddress")
@@ -432,8 +441,11 @@ class RestrictedAssetsTest(RavenTestFramework):
         n0.freezerestrictedasset(asset_name, change_address)
         n0.generate(1)
 
+        # post-freeze validation
         assert_contains(asset_name, n0.listglobalrestrictions())
         assert n0.checkglobalrestriction(asset_name)
+        assert_raises_rpc_error(-8, "restricted asset has been globally frozen", n0.transferfromaddress,
+                                asset_name, address, 1000, n1.getnewaddress())
 
         assert_raises_rpc_error(None, "Invalid Raven change address", n0.unfreezerestrictedasset, asset_name,
                                 "garbagechangeaddress")
@@ -441,10 +453,18 @@ class RestrictedAssetsTest(RavenTestFramework):
         n0.unfreezerestrictedasset(asset_name, change_address)
         n0.generate(1)
 
+        # post-unfreeze validation
         assert_does_not_contain(asset_name, n0.listglobalrestrictions())
         assert not n0.checkglobalrestriction(asset_name)
+        assert_equal(9000, n0.listassetbalancesbyaddress(address)[asset_name])
+        change_address = n0.getnewaddress()
+        n0.transferfromaddress(asset_name, address, 1000, n1.getnewaddress(), "", "", "", change_address)
+        n0.generate(1)
+        self.sync_all()
+        assert_equal(8000, n0.listassetbalancesbyaddress(change_address)[asset_name])
+        assert_equal(2000, n1.listmyassets()[asset_name])
+        address = change_address # assets have moved
 
-        # TODO: test that global freezing actually works to prevent transfers (maybe here maybe in another function...)
 
     def isvalidverifierstring(self):
         self.log.info("Testing isvalidverifierstring()...")
@@ -495,8 +515,8 @@ class RestrictedAssetsTest(RavenTestFramework):
         # self.issuequalifierasset_full()
         # self.transferqualifier()
         # self.tagging()
-        self.freezing()
-        # self.global_freezing()
+        # self.freezing()
+        self.global_freezing()
         # self.isvalidverifierstring()
 
 if __name__ == '__main__':
