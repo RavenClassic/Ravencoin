@@ -286,9 +286,25 @@ class RestrictedAssetsTest(RavenTestFramework):
         n0.issuequalifierasset(tag)
         n0.generate(1)
 
+        base_asset_name = "TAG_RESTRICTED"
+        asset_name = f"${base_asset_name}"
+        qty = 1000
+        verifier = tag
+        issue_address = n0.getnewaddress()
+        n0.issue(base_asset_name)
+        assert_raises_rpc_error(-8, "bad-txns-null-verifier-address-failed-verification", n0.issuerestrictedasset,
+            asset_name, qty, verifier, issue_address)
+        n0.addtagtoaddress(tag, issue_address, change_address)
+        n0.generate(1)
+        n0.issuerestrictedasset(asset_name, qty, verifier, issue_address)
+        n0.generate(1)
+
+        # pre-tagging verification
         assert_does_not_contain(address, n0.listaddressesfortag(tag))
         assert_does_not_contain(tag, n0.listtagsforaddress(address))
         assert not n0.checkaddresstag(address, tag)
+        assert_raises_rpc_error(-8, "bad-txns-null-verifier-address-failed-verification", n0.transfer,
+                                asset_name, 100, address)
 
         assert_raises_rpc_error(None, "Invalid Raven address", n0.addtagtoaddress, tag, "garbageaddress")
         assert_raises_rpc_error(None, "Invalid Raven change address", n0.addtagtoaddress, tag, address,
@@ -297,9 +313,14 @@ class RestrictedAssetsTest(RavenTestFramework):
         n0.addtagtoaddress(tag, address, change_address)
         n0.generate(1)
 
+        # post-tagging verification
         assert_contains(address, n0.listaddressesfortag(tag))
         assert_contains(tag, n0.listtagsforaddress(address))
         assert n0.checkaddresstag(address, tag)
+        txid = n0.transfer(asset_name, 100, address)
+        n0.generate(1)
+        assert_equal(64, len(txid[0]))
+        assert_equal(100, n0.listassetbalancesbyaddress(address)[asset_name])
 
         assert_raises_rpc_error(None, "Invalid Raven address", n0.removetagfromaddress, tag, "garbageaddress")
         assert_raises_rpc_error(None, "Invalid Raven change address", n0.removetagfromaddress, tag, address,
@@ -308,11 +329,13 @@ class RestrictedAssetsTest(RavenTestFramework):
         n0.removetagfromaddress(tag, address, change_address)
         n0.generate(1)
 
+        # post-untagging verification
         assert_does_not_contain(address, n0.listaddressesfortag(tag))
         assert_does_not_contain(tag, n0.listtagsforaddress(address))
         assert not n0.checkaddresstag(address, tag)
+        assert_raises_rpc_error(-8, "bad-txns-null-verifier-address-failed-verification", n0.transfer,
+                                asset_name, 100, address)
 
-        # TODO: test that tagging actually works to prevent transfers (maybe here maybe in another function...)
 
     def freezing(self):
         self.log.info("Testing freezing...")
@@ -438,16 +461,16 @@ class RestrictedAssetsTest(RavenTestFramework):
     def run_test(self):
         self.activate_restricted_assets()
 
-        self.issuerestrictedasset()
-        self.issuerestrictedasset_full()
-        self.reissuerestrictedasset_full()
-        self.issuequalifierasset()
-        self.issuequalifierasset_full()
-        self.transferqualifier()
+        # self.issuerestrictedasset()
+        # self.issuerestrictedasset_full()
+        # self.reissuerestrictedasset_full()
+        # self.issuequalifierasset()
+        # self.issuequalifierasset_full()
+        # self.transferqualifier()
         self.tagging()
-        self.freezing()
-        self.global_freezing()
-        self.isvalidverifierstring()
+        # self.freezing()
+        # self.global_freezing()
+        # self.isvalidverifierstring()
 
 if __name__ == '__main__':
     RestrictedAssetsTest().main()
