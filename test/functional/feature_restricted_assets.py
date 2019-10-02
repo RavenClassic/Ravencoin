@@ -311,7 +311,11 @@ class RestrictedAssetsTest(RavenTestFramework):
                                 "garbagechangeaddress")
 
         n0.addtagtoaddress(tag, address, change_address)
+        n0.addtagtoaddress(tag, address, change_address)  # redundant tagging ok if consistent
         n0.generate(1)
+
+        assert_raises_rpc_error(-32600, "add-qualifier-when-already-assigned", n0.addtagtoaddress,
+                                tag, address, change_address)
 
         # post-tagging verification
         assert_contains(address, n0.listaddressesfortag(tag))
@@ -327,7 +331,11 @@ class RestrictedAssetsTest(RavenTestFramework):
                                 "garbagechangeaddress")
 
         n0.removetagfromaddress(tag, address, change_address)
+        n0.removetagfromaddress(tag, address, change_address) # redundant untagging ok if consistent
         n0.generate(1)
+
+        assert_raises_rpc_error(-32600, "removing-qualifier-when-not-assigned", n0.removetagfromaddress,
+                                tag, address, change_address)
 
         # post-untagging verification
         assert_does_not_contain(address, n0.listaddressesfortag(tag))
@@ -378,7 +386,11 @@ class RestrictedAssetsTest(RavenTestFramework):
                                 "garbagechangeaddress")
 
         n0.freezeaddress(asset_name, address, rvn_change_address)
+        n0.freezeaddress(asset_name, address, rvn_change_address) # redundant freezing ok if consistent
         n0.generate(1)
+
+        assert_raises_rpc_error(-32600, "freeze-address-when-already-frozen", n0.freezeaddress,
+                                asset_name, address, rvn_change_address)
 
         # post-freezing verification
         assert_contains(asset_name, n0.listaddressrestrictions(address))
@@ -391,7 +403,11 @@ class RestrictedAssetsTest(RavenTestFramework):
                                 "garbagechangeaddress")
 
         n0.unfreezeaddress(asset_name, address, rvn_change_address)
+        n0.unfreezeaddress(asset_name, address, rvn_change_address) # redundant unfreezing ok if consistent
         n0.generate(1)
+
+        assert_raises_rpc_error(-32600, "unfreeze-address-when-not-frozen", n0.unfreezeaddress,
+                                asset_name, address, rvn_change_address)
 
         # post-unfreezing verification
         assert_does_not_contain(asset_name, n0.listaddressrestrictions(address))
@@ -439,7 +455,11 @@ class RestrictedAssetsTest(RavenTestFramework):
                                 "garbagechangeaddress")
 
         n0.freezerestrictedasset(asset_name, rvn_change_address)
+        n0.freezerestrictedasset(asset_name, rvn_change_address) # redundant freezing ok if consistent
         n0.generate(1)
+
+        assert_raises_rpc_error(None, "global-freeze-when-already-frozen", n0.freezerestrictedasset,
+                                asset_name, rvn_change_address)
 
         # post-freeze validation
         assert_contains(asset_name, n0.listglobalrestrictions())
@@ -451,7 +471,11 @@ class RestrictedAssetsTest(RavenTestFramework):
                                 "garbagechangeaddress")
 
         n0.unfreezerestrictedasset(asset_name, rvn_change_address)
+        n0.unfreezerestrictedasset(asset_name, rvn_change_address) # redundant unfreezing ok if consistent
         n0.generate(1)
+
+        assert_raises_rpc_error(None, "global-unfreeze-when-not-frozen", n0.unfreezerestrictedasset,
+                                asset_name, rvn_change_address)
 
         # post-unfreeze validation
         assert_does_not_contain(asset_name, n0.listglobalrestrictions())
