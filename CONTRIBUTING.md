@@ -1,7 +1,7 @@
-Contributing to Raven Core
+Contributing to Raven Clasic Core
 ============================
 
-The Raven Core project operates an open contributor model where anyone is
+The Raven Classic Core project operates an open contributor model where anyone is
 welcome to contribute towards development in the form of peer review, testing
 and patches. This document explains the practical process and guidelines for
 contributing.
@@ -82,7 +82,7 @@ Examples:
     Trivial: Fix typo in init.cpp
 
 Note that translations should not be submitted as pull requests, please see
-[Translation Process](https://github.com/RavenProject/Ravencoin/blob/master/doc/translation_process.md) 
+[Translation Process](https://github.com/RavenClassic/Ravencoin/blob/master/doc/translation_process.md) 
 for more information on helping with translations.
 
 If a pull request is specifically not to be considered for merging (yet) please
@@ -169,11 +169,11 @@ workload on reviewing.
 "Decision Making" Process
 -------------------------
 
-The following applies to code changes to the Raven Core project (and related
+The following applies to code changes to the Raven Classic Core project (and related
 projects such as libsecp256k1), and is not to be confused with overall Raven
 Network Protocol consensus changes.
 
-Whether a pull request is merged into Raven Core rests with the project merge
+Whether a pull request is merged into Raven Classic Core rests with the project merge
 maintainers and ultimately the project lead.
 
 Maintainers will take into consideration if a patch is in line with the general
@@ -272,7 +272,7 @@ about:
 Release Policy
 --------------
 
-The project leader is the release manager for each Raven Core release.
+The project leader is the release manager for each Raven Classic Core release.
 
 Copyright
 ---------
